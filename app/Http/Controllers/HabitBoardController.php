@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\HabitEvent;
 use App\Models\HabitBoard;
+use App\Models\BoardVersion;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -38,6 +40,14 @@ class HabitBoardController extends Controller
             'owner_id' => Auth::id(),
         ]);
 
+        // Initial creation log
+        BoardVersion::create([
+            'board_id' => $board->id,
+            'user_id' => Auth::id(),
+            'action' => 'created_board',
+            'description' => Auth::user()->name . ' membuat papan tugas baru: "' . $board->title . '".',
+        ]);
+
         return redirect()->route('boards.show', $board)->with('success', 'Board berhasil dibuat!');
     }
 
@@ -48,7 +58,14 @@ class HabitBoardController extends Controller
             abort(403, 'Anda tidak memiliki akses ke board ini.');
         }
 
-        $board->load(['habits', 'collaborators']);
+        // Eager load habits, collaborators, and the last 15 history logs
+        $board->load([
+            'habits', 
+            'collaborators', 
+            'versions' => function ($query) {
+                $query->with('user')->latest()->take(15);
+            }
+        ]);
         
         return view('boards.show', compact('board'));
     }
@@ -71,6 +88,10 @@ class HabitBoardController extends Controller
 
         $validated = $request->validate([
             'email' => 'required|email|exists:users,email',
+        ], [
+            'email.exists' => 'Email tersebut belum terdaftar di aplikasi. Minta temanmu untuk mendaftar (Register) akun terlebih dahulu!',
+            'email.required' => 'Email wajib diisi.',
+            'email.email' => 'Format email tidak valid.',
         ]);
 
         $user = User::where('email', $validated['email'])->first();
@@ -84,6 +105,26 @@ class HabitBoardController extends Controller
         }
 
         $board->collaborators()->attach($user->id);
+
+        // Log to Version History
+        $log = BoardVersion::create([
+            'board_id' => $board->id,
+            'user_id' => Auth::id(),
+            'action' => 'invited_collaborator',
+            'description' => Auth::user()->name . ' mengundang kolaborator baru: ' . $user->name . '.',
+        ]);
+
+        // Broadcast the invitation log (wrapped in try-catch to prevent app crash when Reverb is offline)
+        try {
+            broadcast(new HabitEvent(null, 'invited', $board->id, Auth::id(), [
+                'id' => $log->id,
+                'description' => $log->description,
+                'time' => $log->created_at->diffForHumans(),
+                'user_name' => Auth::user()->name,
+            ]))->toOthers();
+        } catch (\Exception $e) {
+            // Gracefully ignore offline socket
+        }
 
         return back()->with('success', $user->name . ' berhasil ditambahkan sebagai kolaborator!');
     }
