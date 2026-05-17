@@ -1,0 +1,37 @@
+FASE 1: PERSIAPAN DASAR & KEAMANAN (AUTENTIKASI & DATABASE)
+
+Apa yang dilakukan di fase ini?
+Di awal pembuatan aplikasi "Collaborative Habit Tracker", pondasi paling penting adalah menyiapkan "Rumah" (Database) dan "Sistem Penjaga Pintu" (Autentikasi User). Di fase ini, kita sudah membuat cetak biru (blueprint) untuk semua tabel yang akan menyimpan data tugas-tugas kamu nantinya.
+
+File yang bertambah/berubah dan fungsinya:
+
+1. database/migrations/..._create_habit_tracker_tables.php
+   Fungsi: Ini adalah file "Arsitek". Berisi perintah untuk membuat 4 tabel penting di database MySQL kamu sekaligus:
+   - habit_boards: Untuk menyimpan judul papan (misal: "Challenge 30 Hari").
+   - board_collaborators: Untuk menyimpan data siapa saja teman yang diundang ke sebuah papan.
+   - habits: Untuk menyimpan daftar tugasnya (misal: "Belajar Laravel", lengkap dengan status apakah sudah dicentang atau belum).
+   - board_versions: Untuk mencatat sejarah/riwayat siapa yang mengubah data.
+
+2. app/Models/HabitBoard.php, Habit.php, BoardCollaborator.php, BoardVersion.php
+   Fungsi: Ini adalah "Buku Penghubung". Agar aplikasi Laravel (PHP) bisa berbicara dengan database MySQL, kita membuatkan masing-masing tabel sebuah "Model". Di sini juga kita mengatur relasinya (Misalnya: Satu Habit Board memiliki banyak Habit).
+
+3. app/Models/User.php (Diubah)
+   Fungsi: Kita menambahkan pengaturan agar sistem tahu bahwa satu User bisa memiliki banyak Habit Board (sebagai pemilik), atau bisa menjadi kolaborator di Board milik orang lain.
+
+Penjelasan untuk Pemula:
+- Database (MySQL): Ibarat lemari arsip raksasa.
+- Migrations: Instruksi otomatis agar kita tidak perlu membuat tabel secara manual satu per satu di aplikasi seperti phpMyAdmin.
+- Models (Eloquent): Cara Laravel mempermudah kita memanggil data. Alih-alih menulis perintah SQL rumit, kita cukup memanggil kode seperti `$board->habits` untuk melihat semua daftar tugas di papan tersebut.
+
+LANGKAH SELANJUTNYA UNTUKMU (PENTING!):
+Karena ini project baru, kamu perlu menjalankan perintah instalasi keamanan (Login/Register) secara manual di terminalmu.
+Silakan jalankan perintah ini satu per satu di terminal (pastikan kamu berada di dalam folder google.docs2):
+
+1. composer require laravel/breeze --dev
+2. php artisan breeze:install blade
+3. (Tekan Enter saja saat ditanya pengaturan default)
+4. npm install
+5. npm run build
+6. php artisan migrate
+
+Setelah selesai, kamu sudah punya sistem Login dan Register yang berfungsi penuh lengkap dengan database Habit Tracker kita! 🚀

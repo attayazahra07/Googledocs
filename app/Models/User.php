@@ -45,4 +45,21 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    /**
+     * Relasi: User memiliki banyak Habit Board (sebagai owner).
+     */
+    public function habitBoards(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(HabitBoard::class, 'owner_id');
+    }
+
+    /**
+     * Relasi: User menjadi kolaborator di banyak Habit Board.
+     */
+    public function collaborations(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(HabitBoard::class, 'board_collaborators', 'user_id', 'board_id')
+                    ->withTimestamps();
+    }
 }
