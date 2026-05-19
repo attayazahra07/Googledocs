@@ -66,7 +66,11 @@ class HabitController extends Controller
             abort(403);
         }
 
-        // --- CONFLICT RESOLUTION LOGIC ---
+        // =======================================================
+        // FASE 5: CONCURRENCY PROTECTION & OCC (CONFLICT RESOLUTION)
+        // Mencegah tabrakan data jika dua kolaborator mengubah
+        // status tugas yang sama di waktu yang hampir bersamaan.
+        // =======================================================
         if ($request->has('last_synced_at')) {
             $clientSyncedAt = Carbon::parse($request->input('last_synced_at'));
             $dbUpdatedAt = $habit->updated_at;
