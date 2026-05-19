@@ -122,6 +122,9 @@ class HabitBoardController extends Controller
                 'time' => $log->created_at->diffForHumans(),
                 'user_name' => Auth::user()->name,
             ]))->toOthers();
+
+            // Broadcast real-time invitation card directly to collaborator's dashboard private channel
+            broadcast(new \App\Events\BoardInvitationEvent($board, $user->id));
         } catch (\Exception $e) {
             // Gracefully ignore offline socket
         }
